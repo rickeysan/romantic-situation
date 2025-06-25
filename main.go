@@ -53,7 +53,7 @@ func main() {
 	// ポート番号を環境変数から取得（Renderデプロイ用）
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // デフォルトポート
+		port = "8085" // デフォルトポート
 	}
 
 	fmt.Printf("Server starting on port %s...\n", port)
