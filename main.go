@@ -7,7 +7,10 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"romantic-situation/db"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Situations struct {
@@ -30,6 +33,14 @@ type Response struct {
 var situationsData Situations
 
 func main() {
+	// .envファイルの読み込み
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	// データベースの初期化
+	db.Init()
+
 	// シード値を設定してランダム性を確保
 	rand.Seed(time.Now().UnixNano())
 
@@ -50,10 +61,10 @@ func main() {
 	// API エンドポイント
 	http.HandleFunc("/api/generate", generateHandler)
 
-	// ポート番号を環境変数から取得（Renderデプロイ用）
+	// ポート番号を環境変数から取得
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8085" // デフォルトポート
+		port = "8085"
 	}
 
 	fmt.Printf("Server starting on port %s...\n", port)

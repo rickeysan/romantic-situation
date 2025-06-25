@@ -49,6 +49,7 @@
             font-size: 1.1em;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin-bottom: 10px;
         }
         button:hover {
             background-color: #d81b60;
@@ -67,6 +68,52 @@
             text-align: center;
             display: none;
         }
+        .favorite-btn {
+            background-color: #ff9800;
+            margin-top: 20px;
+        }
+        .favorite-btn:hover {
+            background-color: #f57c00;
+        }
+        .favorites-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            display: none;
+        }
+        .favorites-list {
+            margin-top: 10px;
+        }
+        .favorite-item {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: white;
+            border-radius: 5px;
+            position: relative;
+            padding-right: 60px;
+        }
+        .delete-favorite {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .delete-favorite:hover {
+            background-color: #d32f2f;
+        }
+        .show-favorites-btn {
+            background-color: #4caf50;
+        }
+        .show-favorites-btn:hover {
+            background-color: #388e3c;
+        }
     </style>
 </head>
 <body>
@@ -74,6 +121,7 @@
         <h1>🌟 ロマンチックシチュエーションジェネレーター 🌟</h1>
         
         <button onclick="generateSituation()">シチュエーションを生成</button>
+        <button onclick="toggleFavorites()" class="show-favorites-btn">お気に入り一覧を表示</button>
         
         <div class="loading" id="loading">
             生成中...
@@ -102,10 +150,19 @@
             </div>
             
             <div class="story" id="story"></div>
+            
+            <button onclick="addToFavorites()" class="favorite-btn">お気に入りに追加</button>
+        </div>
+
+        <div class="favorites-container" id="favorites-container">
+            <h2>お気に入り一覧</h2>
+            <div class="favorites-list" id="favorites-list"></div>
         </div>
     </div>
 
     <script>
+        let currentSituation = null;
+
         async function generateSituation() {
             const loading = document.getElementById('loading');
             const result = document.getElementById('result');
@@ -116,6 +173,8 @@
             try {
                 const response = await fetch('/api/generate');
                 const data = await response.json();
+
+                currentSituation = data;
 
                 document.getElementById('location').textContent = data.location;
                 document.getElementById('time').textContent = data.time;
@@ -131,6 +190,63 @@
             } finally {
                 loading.style.display = 'none';
             }
+        }
+
+        function addToFavorites() {
+            if (!currentSituation) return;
+
+            const favorites = getFavorites();
+            const timestamp = new Date().getTime();
+            favorites.push({
+                ...currentSituation,
+                id: timestamp
+            });
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            alert('お気に入りに追加しました！');
+            displayFavorites();
+        }
+
+        function getFavorites() {
+            const favoritesJson = localStorage.getItem('favorites');
+            return favoritesJson ? JSON.parse(favoritesJson) : [];
+        }
+
+        function toggleFavorites() {
+            const container = document.getElementById('favorites-container');
+            if (container.style.display === 'none' || !container.style.display) {
+                container.style.display = 'block';
+                displayFavorites();
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function displayFavorites() {
+            const favorites = getFavorites();
+            const favoritesList = document.getElementById('favorites-list');
+            favoritesList.innerHTML = '';
+
+            favorites.forEach(favorite => {
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.innerHTML = `
+                    <div><strong>場所:</strong> ${favorite.location}</div>
+                    <div><strong>時間:</strong> ${favorite.time}</div>
+                    <div><strong>キャラクター:</strong> ${favorite.character}</div>
+                    <div><strong>状況:</strong> ${favorite.situation}</div>
+                    <div><strong>ムード:</strong> ${favorite.mood}</div>
+                    <div><strong>ストーリー:</strong><br>${favorite.story_text}</div>
+                    <button onclick="deleteFavorite(${favorite.id})" class="delete-favorite">削除</button>
+                `;
+                favoritesList.appendChild(item);
+            });
+        }
+
+        function deleteFavorite(id) {
+            let favorites = getFavorites();
+            favorites = favorites.filter(f => f.id !== id);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            displayFavorites();
         }
     </script>
 </body>
